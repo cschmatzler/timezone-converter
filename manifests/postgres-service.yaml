@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: postgres
+  namespace: phrase
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: timezone-converter
+    app.kubernetes.io/version: "15.1"
+
+spec:
+  type: ClusterIP
+
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: timezone-converter
+
+  ports:
+    - name: postgresql
+      protocol: TCP
+      port: 5432
+      targetPort: 5432

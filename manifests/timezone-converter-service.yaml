@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: timezone-converter
+  namespace: phrase
+  labels:
+    app.kubernetes.io/name: timezone-converter
+    app.kubernetes.io/part-of: timezone-converter
+    app.kubernetes.io/version: 0.1.0
+
+spec:
+  type: ClusterIP
+
+  selector:
+    app.kubernetes.io/name: timezone-converter
+    app.kubernetes.io/part-of: timezone-converter
+
+  ports:
+    - name: http
+      protocol: TCP
+      port: 4000
+      targetPort: 4000

@@ -1,0 +1,7 @@
+resources:
+  - namespace.yaml
+  - postgres-init-scripts.yaml
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  - timezone-converter-deployment.yaml
+  - timezone-converter-service.yaml
