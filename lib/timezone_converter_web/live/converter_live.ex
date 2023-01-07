@@ -9,7 +9,7 @@ defmodule TimezoneConverterWeb.ConverterLive do
   def render(assigns) do
     ~H"""
     <div id="converter" phx-hook="LocalTimezone" class="space-y-12">
-      <h1 class="text-3xl text-bold text-rose-800">Timezone converter</h1>
+      <h1 class="text-3xl text-rose-800 text-bold">Timezone converter</h1>
       <section>
         <span class="text-lg">Current local time: <%= format(@current_time) %></span>
       </section>
@@ -18,7 +18,7 @@ defmodule TimezoneConverterWeb.ConverterLive do
         <span class="text-gray-500"><%= @client_timezone %>, Format: HH:mm</span>
         <.form :let={f} for={@changeset} as={:time} phx-change="update-time">
           <%= text_input(f, :time, class: "rounded-md px-5") %>
-          <span phx-click="use-current-time" class="cursor-pointer ml-8 justify-center underline">
+          <span phx-click="use-current-time" class="justify-center ml-8 underline cursor-pointer">
             Reset and use current time
           </span>
           <%= if @parse_error do %>
@@ -56,12 +56,12 @@ defmodule TimezoneConverterWeb.ConverterLive do
         <.form :let={f} for={:cities} phx-change="search">
           <%= text_input(f, :query, class: "rounded-lg px-5") %>
         </.form>
-        <ol class="space-x-4 mt-6">
+        <ol class="mt-6 space-x-4">
           <%= for result <- @city_search_results do %>
             <button
               phx-click="add-city"
               phx-value-city={result.id}
-              class="bg-gray-200 px-4 py-2 rounded-lg"
+              class="py-2 px-4 bg-gray-200 rounded-lg"
             >
               <%= result.name %>
             </button>

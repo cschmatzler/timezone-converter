@@ -21,7 +21,6 @@ defmodule TimezoneConverterWeb.Router do
     live "/:cities", ConverterLive, :index
   end
 
-
   if Application.compile_env(:timezone_converter, :dev_routes) do
     import Phoenix.LiveDashboard.Router
 
