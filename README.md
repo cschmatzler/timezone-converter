@@ -52,6 +52,8 @@ Cities can be added by connecting to Postgres via `psql` and running
 
 ```
 insert into cities(id, name, timezone) values(uuid_generate_v4(), 'Tokyo', 'Asia/Tokyo');
+insert into cities(id, name, timezone) values(uuid_generate_v4(), 'Hamburg', 'Europe/Berlin');
+insert into cities(id, name, timezone) values(uuid_generate_v4(), 'Porto', 'Europe/Lisbon');
 ```
 
 The list of correct TZ database names, such as `Asia/Tokyo`, can be found, for example, on [Wikipedia](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).

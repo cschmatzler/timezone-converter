@@ -37,10 +37,10 @@ defmodule TimezoneConverterWeb.ConverterLive do
                 <span class="basis-1/3"><%= city.name %></span>
                 <span class="basis-2/6"><%= city.timezone %></span>
                 <span class="basis-1/6">
-                  <%= if @parsed_time do %>
-                    <%= Timezones.convert(@parsed_time, city.timezone) |> format() %>
-                  <% else %>
+                  <%= if @parse_error do %>
                     <%= Timezones.convert(@current_time, city.timezone) |> format() %>
+                  <% else %>
+                    <%= Timezones.convert(@selected_time, city.timezone) |> format() %>
                   <% end %>
                 </span>
                 <button phx-click="remove-city" phx-value-city={city.id} class="basis-1/6">
@@ -74,15 +74,21 @@ defmodule TimezoneConverterWeb.ConverterLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    # This is admittedly hella inefficient, since we're creating roundtrips every
+    # second. In a production-ready world, this should probably calculate seconds
+    # to the next minute, set a timer for that initial sync at the full minute,
+    # then set an interval to 60000.
+    # This is good enough for this exercise, though.
     :timer.send_interval(1000, self(), :update_current_time)
 
     socket =
       socket
+      # Temporary assignment until we receive the `mounted()` event from the client
       |> assign(:client_timezone, "Etc/UTC")
-      |> assign(:current_time, Timex.now())
-      |> assign(:changeset, changeset())
+      |> assign_current_time("Etc/UTC")
+      |> assign(:selected_time, Timex.now())
       |> assign(:parse_error, false)
-      |> assign(:parsed_time, nil)
+      |> assign(:use_custom_time, false)
       |> assign(:city_search_results, [])
 
     {:ok, socket}
@@ -96,10 +102,11 @@ defmodule TimezoneConverterWeb.ConverterLive do
       # Cast to UUID
       |> Enum.map(&Ecto.UUID.cast(&1))
       # returning `{:ok, uuid} | :error`, so we filter out the errors
-      |> Enum.filter(&(&1 != :error))
+      |> Enum.reject(&(&1 == :error))
       # and get the UUID out of the tuple.
       |> Enum.map(&elem(&1, 1))
       |> Enum.map(&Timezones.get_city(&1))
+      |> Enum.reject(&is_nil(&1))
 
     socket = assign(socket, :cities, cities)
 
@@ -109,14 +116,19 @@ defmodule TimezoneConverterWeb.ConverterLive do
   @impl true
   def handle_event("set-client-timezone", timezone, socket) do
     socket =
-      socket |> assign(:client_timezone, timezone) |> assign(:current_time, Timex.now(timezone))
+      socket
+      |> assign(:client_timezone, timezone)
+      |> assign_current_time(timezone)
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("use-current-time", _payload, socket) do
-    socket = socket |> assign(:changeset, changeset()) |> assign(:parsed_time, nil)
+    socket =
+      socket
+      |> assign_current_time()
+      |> assign(:use_custom_time, false)
 
     {:noreply, socket}
   end
@@ -130,7 +142,8 @@ defmodule TimezoneConverterWeb.ConverterLive do
         socket =
           socket
           |> assign(:parse_error, false)
-          |> assign(:parsed_time, datetime)
+          |> assign(:use_custom_time, true)
+          |> assign(:selected_time, datetime)
 
         {:noreply, socket}
 
@@ -138,7 +151,6 @@ defmodule TimezoneConverterWeb.ConverterLive do
         socket =
           socket
           |> assign(:parse_error, true)
-          |> assign(:parsed_time, nil)
 
         {:noreply, socket}
     end
@@ -176,12 +188,32 @@ defmodule TimezoneConverterWeb.ConverterLive do
 
   @impl true
   def handle_info(:update_current_time, socket) do
-    socket = assign(socket, :current_time, Timex.now(socket.assigns.client_timezone))
+    socket =
+      assign_current_time(
+        socket,
+        not socket.assigns.use_custom_time
+      )
 
     {:noreply, socket}
   end
 
-  defp changeset(time \\ "") do
+  defp assign_current_time(socket, update_changeset \\ true) do
+    current_time_in_timezone = Timex.now(socket.assigns.client_timezone)
+
+    socket = assign(socket, :current_time, current_time_in_timezone)
+
+    socket =
+      if update_changeset,
+        do:
+          socket
+          |> assign(:changeset, changeset(format(current_time_in_timezone)))
+          |> assign(:selected_time, current_time_in_timezone),
+        else: socket
+
+    socket
+  end
+
+  defp changeset(time) do
     {%{}, %{time: :string}}
     |> Ecto.Changeset.cast(%{time: time}, [:time])
   end
