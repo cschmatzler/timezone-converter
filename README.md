@@ -46,6 +46,12 @@ kustomize build manifests | kubectl apply -f -
 
 This command also initialises the database and should ensure everything is ready to go.
 
+### A note on ingress
+
+I haven't added an ingress manifest, since I have no idea what y'all are actuall using
+in your cluster, and there's way too many ingress controllers all with their own
+custom resource definitions. Happy to add one live as part of our interview on Wednesday.
+
 ## Adding cities
 
 Cities can be added by connecting to Postgres via `psql` and running
